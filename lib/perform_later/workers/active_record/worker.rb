@@ -6,7 +6,10 @@ module PerformLater
           args = PerformLater::ArgsParser.args_from_resque(args)
           runner_klass = klass.constantize
           
-          record = runner_klass.find(id)
+          record = nil
+          Octopus.using(:master) do
+            record = runner_klass.find(id)
+          end
           
           perform_job(record, method, args)
         end
