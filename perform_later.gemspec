@@ -22,7 +22,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'rails', '~> 3.0'
   s.add_dependency 'resque'
   s.add_dependency 'redis'
-  s.add_dependency 'octopus'
 
 
   s.add_development_dependency 'rake'
