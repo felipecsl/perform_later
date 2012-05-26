@@ -8,7 +8,8 @@ module PerformLater
           
           record = nil
           Octopus.using(:master) do
-            record = runner_klass.find(id)
+            record = runner_klass.where(id: id).first
+            raise ActiveRecord::RecordNotFound.new("Couldn't find UserCheckin with ID=#{id}") unless record
           end
           
           perform_job(record, method, args)
