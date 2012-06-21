@@ -12,21 +12,21 @@ module PerformLater
           
           record = nil
 
-          begin
-            # Try on slave first...
-            record = runner_klass.where(id: id).first
-            raise "Couldn't find #{klass} with ID = #{id}" unless record
-
+          # Try on slave first...
+          record = runner_klass.where(id: id).first
+          
+          if record
             perform_job(record, method, args)
-            
-          rescue ActiveRecord::RecordNotFound => e
+          else
             # If can't find on slave, go for master all the way
             Octopus.using(:master) do
               record = runner_klass.where(id: id).first
+              
+              # Can't find on master either...
               raise "Couldn't find #{klass} with ID = #{id}" unless record
 
+              # perform job using master as well
               perform_job(record, method, args)
-            end
           end
         end
       end
