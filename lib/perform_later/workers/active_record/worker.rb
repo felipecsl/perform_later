@@ -6,13 +6,23 @@ module PerformLater
           args = PerformLater::ArgsParser.args_from_resque(args)
           runner_klass = klass.constantize
           
-          record = nil
-          Octopus.using(:master) do
-            record = runner_klass.where(id: id).first
-            raise "Couldn't find #{klass} with ID=#{id}" unless record
-          end
+          # Try on slave first...
+          record = runner_klass.where(id: id).first
           
-          perform_job(record, method, args)
+          if record
+            perform_job(record, method, args)
+          else
+            # If can't find on slave, go for master all the way
+            Octopus.using(:master) do
+              record = runner_klass.where(id: id).first
+              
+              # Can't find on master either...
+              raise "Couldn't find #{klass} with ID = #{id}" unless record
+
+              # perform job using master as well
+              perform_job(record, method, args)
+            end
+          end
         end
       end
     end

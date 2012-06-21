@@ -27,6 +27,7 @@ module PerformLater
 
               # perform job using master as well
               perform_job(record, method, args)
+            end
           end
         end
       end
