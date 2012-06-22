@@ -12,7 +12,7 @@ module PerformLater
           begin
             slave_status = ActiveRecord::Base.connection.select_one("show slave status")
 
-            if status['Seconds_Behind_Master'] > 0
+            if slave_status['Seconds_Behind_Master'] > 0
               Octopus.using(:master) do
                 perform_job klass, method, arguments
               end
