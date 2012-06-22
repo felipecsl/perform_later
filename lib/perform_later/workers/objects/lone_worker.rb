@@ -9,17 +9,7 @@ module PerformLater
           arguments = PerformLater::ArgsParser.args_from_resque(args)          
           klass = klass_name.constantize
 
-          begin
-            slave_status = ::ActiveRecord::Base.connection.select_one("show slave status")
-
-            if slave_status['Seconds_Behind_Master'] > 0
-              Octopus.using(:master) do
-                perform_job klass, method, arguments
-              end
-            else
-              perform_job klass, method, arguments
-            end
-          rescue
+          Octopus.using(:master) do
             perform_job klass, method, arguments
           end
         end
