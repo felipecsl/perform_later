@@ -10,7 +10,7 @@ module PerformLater
           klass = klass_name.constantize
 
           begin
-            slave_status = ActiveRecord::Base.connection.select("show slave status")
+            slave_status = ActiveRecord::Base.connection.select_one("show slave status")
 
             if status['Seconds_Behind_Master'] > 0
               Octopus.using(:master) do
