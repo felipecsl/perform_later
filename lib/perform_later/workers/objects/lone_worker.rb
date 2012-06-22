@@ -6,9 +6,22 @@ module PerformLater
           digest = PerformLater::PayloadHelper.get_digest(klass_name, method, args)
           Resque.redis.del(digest)
 
-          arguments = PerformLater::ArgsParser.args_from_resque(args)
-          
-          perform_job(klass_name.constantize, method, arguments)
+          arguments = PerformLater::ArgsParser.args_from_resque(args)          
+          klass = klass_name.constantize
+
+          begin
+            slave_status = ActiveRecord::Base.connection.select("show slave status")
+
+            if status['Seconds_Behind_Master'] > 0
+              Octopus.using(:master) do
+                perform_job klass, method, arguments
+              end
+            else
+              perform_job klass, method, arguments
+            end
+          rescue
+            perform_job klass, method, arguments
+          end
         end
       end
     end
