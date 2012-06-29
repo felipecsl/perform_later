@@ -30,3 +30,11 @@ RSpec.configure do |config|
     $redis.flushdb
   end
 end
+
+class Octopus
+  def self.using(name)
+    if block_given?
+      yield
+    end
+  end
+end
