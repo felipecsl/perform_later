@@ -17,6 +17,7 @@ module Resque::Plugins::Later::Method
         if loner
           return "AR EXISTS!" unless Resque.redis.get(digest).blank?
           Resque.redis.set(digest, 'EXISTS')
+          Resque.redis.expire(digest, 86400) # expires in one day
         end
         
         Resque::Job.create(queue, klass, send(:class).name, send(:id), "now_#{method_name}", *args)
@@ -47,6 +48,7 @@ module Resque::Plugins::Later::Method
 
       return true unless Resque.redis.get(digest).blank?
       Resque.redis.set(digest, 'EXISTS')
+      Resque.redis.expire(digest, 86400) # expires in one day
 
       return false
     end
