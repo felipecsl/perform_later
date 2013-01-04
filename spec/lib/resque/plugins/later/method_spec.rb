@@ -3,9 +3,9 @@ require 'spec_helper'
 describe Resque::Plugins::Later::Method do
   before(:each) { PerformLater.config.enabled = true }
   before(:each) { Resque.redis = $redis }
-  
+
   context "enabled" do
-    before(:each) do 
+    before(:each) do
       PerformLater.config.stub!(:enabled?).and_return(true)
       User.later :long_running_method
     end
@@ -18,18 +18,20 @@ describe Resque::Plugins::Later::Method do
   end
 
   context "loner" do
-    before(:each) do 
+    before(:each) do
       PerformLater.config.stub!(:enabled?).and_return(true)
       User.later :lonely_long_running_method, loner: true
     end
 
     it "should only add a single method to the queue, since the config is with a loner" do
       user = User.create
+
       user.lonely_long_running_method
       user.lonely_long_running_method
       user.lonely_long_running_method
       user.lonely_long_running_method
       user.lonely_long_running_method
+
       Resque.peek(:generic, 0, 20).length.should == 1
     end
 
@@ -85,6 +87,6 @@ describe Resque::Plugins::Later::Method do
        user = User.create
        user.should_receive(:method_with_integer_option).with(1).and_return(1)
        user.perform_later!(:generic, :method_with_integer_option, 1)
-    end 
+    end
   end
 end
