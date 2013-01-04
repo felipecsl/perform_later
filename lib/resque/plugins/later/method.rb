@@ -5,7 +5,7 @@ module Resque::Plugins::Later::Method
     def later(method_name, opts={})
       alias_method "now_#{method_name}", method_name
       return unless PerformLater.config.enabled?
-      
+
       define_method "#{method_name}" do |*args|
         loner          = opts.fetch(:loner, false)
         queue          = opts.fetch(:queue, :generic)
@@ -15,11 +15,12 @@ module Resque::Plugins::Later::Method
         digest         = PerformLater::PayloadHelper.get_digest(klass, method_name, args)
 
         if loner
-          return "AR EXISTS!" unless Resque.redis.get(digest).blank?
-          Resque.redis.set(digest, 'EXISTS')
-          Resque.redis.expire(digest, 86400) # expires in one day
+          return "AR EXISTS" unless PerformLater.config.redis.get(digest).blank?
+
+          PerformLater.config.redis.set(digest, 'EXISTS')
+          PerformLater.config.redis.expire(digest, 86400) # expires in one day
         end
-        
+
         Resque::Job.create(queue, klass, send(:class).name, send(:id), "now_#{method_name}", *args)
       end
     end
@@ -27,7 +28,7 @@ module Resque::Plugins::Later::Method
 
   def perform_later(queue, method, *args)
     return self.send(method, *args) unless PerformLater.config.enabled?
-    
+
 
     worker = PerformLater::Workers::ActiveRecord::Worker
     enqueue_in_resque_or_send(worker, queue, method, args)
@@ -36,19 +37,19 @@ module Resque::Plugins::Later::Method
   def perform_later!(queue, method, *args)
     return self.send(method, *args) unless PerformLater.config.enabled?
     return "AR EXISTS!" if loner_exists(method, args)
-    
+
     worker = PerformLater::Workers::ActiveRecord::LoneWorker
     enqueue_in_resque_or_send(worker, queue, method, args)
   end
 
-  private 
+  private
     def loner_exists(method, args)
       args = PerformLater::ArgsParser.args_to_resque(args)
       digest = PerformLater::PayloadHelper.get_digest(self.class.name, method, args)
 
-      return true unless Resque.redis.get(digest).blank?
-      Resque.redis.set(digest, 'EXISTS')
-      Resque.redis.expire(digest, 86400) # expires in one day
+      return true unless PerformLater.config.redis.get(digest).blank?
+      PerformLater.config.redis.set(digest, 'EXISTS')
+      PerformLater.config.redis.expire(digest, 86400) # expires in one day
 
       return false
     end

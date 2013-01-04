@@ -32,6 +32,7 @@ RSpec.configure do |config|
 
   config.before(:each) do
     PerformLater.config.loner_prefix = "loner"
+    PerformLater.config.redis = $redis
   end
 end
 
