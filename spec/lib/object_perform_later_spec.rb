@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-class DummyClass 
+class DummyClass
   def self.do_something_really_heavy
-        
+
   end
 
   def self.do_something_with_string(value)
@@ -38,7 +38,7 @@ describe ObjectPerformLater do
 
   it "should send the method on the class when the config is disabled" do
     PerformLater.config.stub!(:enabled?).and_return(false)
-    
+
     User.should_receive(:get_metadata)
     User.perform_later(:generic, :get_metadata)
 
@@ -47,7 +47,7 @@ describe ObjectPerformLater do
 
   it "should only add the method a single time to the queue" do
     PerformLater.config.stub!(:enabled?).and_return(true)
-    
+
     DummyClass.perform_later!(:generic, :do_something_really_heavy)
     DummyClass.perform_later!(:generic, :do_something_really_heavy)
     DummyClass.perform_later!(:generic, :do_something_really_heavy)
@@ -87,7 +87,7 @@ describe ObjectPerformLater do
     before(:each) do
       PerformLater.config.stub!(:enabled?).and_return(false)
     end
-    
+
     it "should pass the correct value (String)" do
       DummyClass.perform_later(:generic, :do_something_with_string, "Avi Tzurel").should == "Avi Tzurel"
     end

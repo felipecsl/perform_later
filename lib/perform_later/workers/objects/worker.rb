@@ -4,8 +4,11 @@ module PerformLater
       class Worker < PerformLater::Workers::Base
         def self.perform(klass_name, method, *args)
           arguments = PerformLater::ArgsParser.args_from_resque(args)
+          klass = klass_name.constantize
 
-          perform_job(klass_name.constantize, method, arguments)
+          Octopus.using(:master) do
+            perform_job klass, method, arguments
+          end
         end
       end
     end

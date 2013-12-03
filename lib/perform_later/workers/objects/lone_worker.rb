@@ -4,11 +4,14 @@ module PerformLater
       class LoneWorker < PerformLater::Workers::Base
         def self.perform(klass_name, method, *args)
           digest = PerformLater::PayloadHelper.get_digest(klass_name, method, args)
-          Resque.redis.del(digest)
+          PerformLater.config.redis.del(digest)
 
           arguments = PerformLater::ArgsParser.args_from_resque(args)
-          
-          perform_job(klass_name.constantize, method, arguments)
+          klass = klass_name.constantize
+
+          Octopus.using(:master) do
+            perform_job klass, method, arguments
+          end
         end
       end
     end

@@ -19,8 +19,10 @@ module ObjectPerformLater
     def loner_exists(method, *args)
       digest = PerformLater::PayloadHelper.get_digest(self.name, method, args)
 
-      return true unless Resque.redis.get(digest).blank?
-      Resque.redis.set(digest, 'EXISTS')
+      return true unless PerformLater.config.redis.get(digest).blank?
+      PerformLater.config.redis.set(digest, 'EXISTS')
+      PerformLater.config.redis.expire(digest, 86400) # expires in one day
+
       return false
     end
 
